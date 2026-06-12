@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人生五大需求金字塔・風險試算</title>
+<style>
+:root{
+  --ink:#16324F;
+  --ink-soft:#5A6B7B;
+  --bg:#F2F5F7;
+  --card:#FFFFFF;
+  --line:#DDE5EB;
+  --ok:#2C8C82;
+  --warn:#E8A33D;
+  --bad:#D95D4E;
+  --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  background:var(--bg);color:var(--ink);min-height:100vh;line-height:1.6;
+}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px 60px}
+
+.hero{padding:28px 4px 18px}
+.hero .eyebrow{font-size:13px;letter-spacing:.2em;color:var(--ink-soft);margin-bottom:8px}
+.hero h1{font-size:25px;font-weight:800;line-height:1.4}
+.hero h1 em{font-style:normal;color:var(--bad);border-bottom:4px solid rgba(217,93,78,.25)}
+.hero p{margin-top:10px;font-size:14px;color:var(--ink-soft)}
+
+.steps{display:flex;gap:6px;margin:4px 4px 18px}
+.steps span{flex:1;height:5px;border-radius:3px;background:var(--line);transition:background .3s}
+.steps span.on{background:var(--ink)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 18px;margin-bottom:16px}
+.card h2{font-size:17px;font-weight:700;margin-bottom:4px}
+.card .sub{font-size:13px;color:var(--ink-soft);margin-bottom:18px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+.field .hint{font-weight:400;color:var(--ink-soft);font-size:12px;margin-left:4px}
+.field input[type=number],.field input[type=text],.field input[type=tel]{
+  width:100%;padding:12px 14px;font-size:16px;border:1.5px solid var(--line);
+  border-radius:10px;background:#FBFCFD;color:var(--ink);
+}
+.field input:focus{outline:2px solid var(--ink);outline-offset:1px;border-color:var(--ink)}
+.unit-row{position:relative}
+.unit-row .unit{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink-soft)}
+.unit-row input{padding-right:56px}
+.choice{display:flex;gap:8px;flex-wrap:wrap}
+.choice button{
+  flex:1;min-width:64px;padding:11px 8px;font-size:15px;border:1.5px solid var(--line);
+  border-radius:10px;background:#FBFCFD;color:var(--ink);cursor:pointer;
+}
+.choice button.sel{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
+.row2{display:flex;gap:10px}
+.row2 .field{flex:1}
+
+.nav{display:flex;gap:10px;margin-top:6px}
+.btn{flex:1;padding:15px;font-size:16px;font-weight:700;border-radius:12px;border:none;cursor:pointer;transition:opacity .15s}
+.btn:active{opacity:.8}
+.btn-main{background:var(--ink);color:#fff}
+.btn-ghost{background:transparent;color:var(--ink-soft);border:1.5px solid var(--line)}
+.btn-main:disabled{opacity:.4;cursor:not-allowed}
+
+/* consent */
+.consent-box{
+  border:1.5px solid var(--line);border-radius:12px;background:#FBFCFD;
+  padding:14px;font-size:12.5px;color:var(--ink-soft);max-height:180px;overflow-y:auto;
+  margin-bottom:12px;line-height:1.7;
+}
+.consent-box b{color:var(--ink)}
+.consent-check{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin-bottom:16px}
+.consent-check input{width:20px;height:20px;margin-top:2px;flex-shrink:0;accent-color:var(--ink)}
+
+/* result */
+.score-card{background:var(--ink);color:#fff;border-radius:var(--radius);padding:26px 20px;text-align:center;margin-bottom:16px}
+.score-card .lab{font-size:13px;letter-spacing:.15em;opacity:.75}
+.score-num{font-size:60px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.score-num small{font-size:20px;font-weight:600;opacity:.7}
+.score-msg{font-size:14px;margin-top:6px;opacity:.9}
+.gap-total{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.18);font-size:14px}
+.gap-total b{font-size:22px;color:#FFC9C0}
+
+.pyramid-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 14px;margin-bottom:16px;text-align:center}
+.pyramid-card h3{font-size:15px;margin-bottom:4px}
+.pyramid-card .sub{font-size:12px;color:var(--ink-soft);margin-bottom:10px}
+.legend{display:flex;justify-content:center;gap:14px;font-size:11.5px;color:var(--ink-soft);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+
+.risk{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:12px}
+.risk-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.risk-head .name{font-size:15px;font-weight:700}
+.risk-head .name .lv{font-size:11px;color:var(--ink-soft);font-weight:600;margin-right:6px;border:1px solid var(--line);border-radius:6px;padding:1px 6px;vertical-align:1px}
+.tag{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px}
+.tag.ok{background:rgba(44,140,130,.12);color:var(--ok)}
+.tag.warn{background:rgba(232,163,61,.15);color:#B07A1E}
+.tag.bad{background:rgba(217,93,78,.12);color:var(--bad)}
+.bar{height:10px;border-radius:5px;background:repeating-linear-gradient(45deg,#F3D4CE,#F3D4CE 6px,#FBEAE7 6px,#FBEAE7 12px);overflow:hidden;margin:8px 0 6px}
+.bar i{display:block;height:100%;border-radius:5px;background:var(--ok);transition:width .8s ease}
+.risk .nums{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft)}
+.risk .why{font-size:13px;color:var(--ink-soft);margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.risk .why b{color:var(--bad)}
+.cases{margin-top:10px;border:1px solid var(--line);border-radius:10px;background:#FBFCFD}
+.cases summary{padding:10px 12px;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent}
+.cases summary::-webkit-details-marker{display:none}
+.cases summary::before{content:'▸ '}
+.cases[open] summary::before{content:'▾ '}
+.case{padding:0 12px 12px;font-size:12.5px;color:var(--ink-soft);line-height:1.65}
+.case p{margin-bottom:4px}
+.case a{font-size:11.5px;color:var(--ok);text-decoration:none;border-bottom:1px dotted var(--ok)}
+.case .src{font-size:11.5px;color:#9AA8B3}
+.fixlist{margin-top:10px;border:1px solid rgba(217,93,78,.3);border-radius:10px;background:rgba(217,93,78,.05);padding:10px 12px}
+.fixlist .fix-title{font-size:13px;font-weight:700;color:var(--bad);margin-bottom:4px}
+.fixlist .fix-item{font-size:12.5px;color:var(--ink-soft);line-height:1.7}
+.fixlist .fix-item b{color:var(--bad)}
+
+.cta{background:var(--card);border:1.5px solid var(--ink);border-radius:var(--radius);padding:20px 18px;text-align:center}
+.cta h3{font-size:16px;margin-bottom:6px}
+.cta p{font-size:13px;color:var(--ink-soft);margin-bottom:14px}
+.cta .btn{width:100%}
+.cta .btn + .btn{margin-top:10px}
+.btn-line{background:#06C755;color:#fff}
+
+.disclaimer{font-size:11px;color:#9AA8B3;margin-top:18px;text-align:center;line-height:1.7}
+.hidden{display:none}
+@media (prefers-reduced-motion: reduce){ .bar i{transition:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">人生五大需求金字塔・3 分鐘檢測</div>
+    <h1>醫療、保障、退休、理財、傳承——<br>你的人生五層防護，<em>哪一層有缺口</em>？</h1>
+    <p>從最底層的醫療往上盤點到傳承，把保險和投資一起算進來，看清楚你現在的位置與缺口。</p>
+  </header>
+
+  <div class="steps" id="steps">
+    <span class="on"></span><span></span><span></span><span></span>
+  </div>
+
+  <!-- STEP 1 基本資料 -->
+  <section class="card" id="step1">
+    <h2>① 基本資料</h2>
+    <div class="sub">需求金字塔的形狀，每個人都不一樣</div>
+
+    <div class="field">
+      <label>姓名（或稱呼）</label>
+      <input type="text" id="name" placeholder="例如 陳小明" autocomplete="name">
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>性別</label>
+        <div class="choice" id="genderChoice">
+          <button data-v="男">男</button>
+          <button data-v="女">女</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>年齡</label>
+        <div class="unit-row"><input type="number" min="0" id="age" inputmode="numeric" placeholder="35"><span class="unit">歲</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>婚姻狀況</label>
+      <div class="choice" id="marryChoice">
+        <button data-v="未婚">未婚</button>
+        <button data-v="已婚">已婚</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>需要扶養的家人<span class="hint">（小孩、父母、伴侶）</span></label>
+      <div class="choice" id="depChoice">
+        <button data-v="0">沒有</button>
+        <button data-v="1">1 位</button>
+        <button data-v="2">2 位</button>
+        <button data-v="3">3 位以上</button>
+      </div>
+    </div>
+
+    <div class="field" id="supportField" style="display:none">
+      <label>大約還需要照顧他們幾年？</label>
+      <div class="unit-row"><input type="number" min="0" id="supportYears" inputmode="numeric" placeholder="例如 20"><span class="unit">年</span></div>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-main" onclick="go(2)">下一步</button>
+    </div>
+  </section>
+
+  <!-- STEP 2 收支與資產 -->
+  <section class="card hidden" id="step2">
+    <h2>② 收支與資產盤點</h2>
+    <div class="sub">理財層的關鍵：存款、股票、被動收入都算進來</div>
+
+    <div class="field">
+      <label>個人年收入</label>
+      <div class="unit-row"><input type="number" min="0" id="income" inputmode="numeric" placeholder="例如 80"><span class="unit">萬元</span></div>
+    </div>
+
+    <div class="field">
+      <label>家庭每月生活開銷</label>
+      <div class="unit-row"><input type="number" min="0" id="expense" inputmode="numeric" placeholder="例如 5"><span class="unit">萬元</span></div>
+    </div>
+
+    <div class="field">
+      <label>現金與活存<span class="hint">（隨時可動用的）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="savings" inputmode="numeric" placeholder="例如 60"><span class="unit">萬元</span></div>
+    </div>
+
+    <div class="field">
+      <label>投資資產市值<span class="hint">（股票、ETF、基金、定存等）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="invest" inputmode="numeric" placeholder="例如 150"><span class="unit">萬元</span></div>
+    </div>
+
+    <div class="field">
+      <label>每年被動收入<span class="hint">（股息、配息、租金，沒有填 0）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="passive" inputmode="numeric" placeholder="例如 6"><span class="unit">萬元/年</span></div>
+    </div>
+
+    <div class="field">
+      <label>每年投入投資理財的金額<span class="hint">（定期定額、買股、買基金等）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="investYearly" inputmode="numeric" placeholder="例如 24"><span class="unit">萬元/年</span></div>
+    </div>
+
+    <div class="field">
+      <label>每年保險費支出<span class="hint">（所有保單年繳保費加總）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="premiumYearly" inputmode="numeric" placeholder="例如 8"><span class="unit">萬元/年</span></div>
+    </div>
+
+    <div class="field">
+      <label>不動產市值<span class="hint">（沒有填 0）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="estate" inputmode="numeric" placeholder="例如 1200"><span class="unit">萬元</span></div>
+    </div>
+
+    <div class="field">
+      <label>房貸＋其他負債<span class="hint">（沒有填 0）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="debt" inputmode="numeric" placeholder="例如 600"><span class="unit">萬元</span></div>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="go(1)">上一步</button>
+      <button class="btn btn-main" onclick="go(3)">下一步</button>
+    </div>
+  </section>
+
+  <!-- STEP 3 保障現況 -->
+  <section class="card hidden" id="step3">
+    <h2>③ 目前的保障</h2>
+    <div class="sub">不確定的話填大概印象，或填 0</div>
+
+    <div class="field">
+      <label>你清楚了解自己目前的保障內容嗎？</label>
+      <div class="choice" id="knowChoice">
+        <button data-v="清楚">清楚</button>
+        <button data-v="不清楚">不太清楚</button>
+      </div>
+      <div class="hint" id="knowHint" style="margin-top:8px;display:none"></div>
+    </div>
+
+    <div id="coverFields" style="display:none">
+    <div class="field">
+      <label>壽險保額<span class="hint">（身故時家人能領到的）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="lifeCover" inputmode="numeric" placeholder="例如 200"><span class="unit">萬元</span></div>
+    </div>
+
+    <div class="field">
+      <label>意外壽險保額<span class="hint">（建議至少 100 萬）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="accCover" inputmode="numeric" placeholder="例如 100"><span class="unit">萬元</span></div>
+    </div>
+
+    <div class="field">
+      <label>意外住院日額<span class="hint">（建議至少 1,000 元/日）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="accDaily" inputmode="numeric" placeholder="例如 1000"><span class="unit">元/日</span></div>
+    </div>
+
+    <div class="field">
+      <label>意外實支實付額度<span class="hint">（建議至少 5 萬/次）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="accReimb" inputmode="numeric" placeholder="例如 5"><span class="unit">萬元/次</span></div>
+    </div>
+
+    <div class="field">
+      <label>住院醫療日額<span class="hint">（住院一天賠多少）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="medDaily" inputmode="numeric" placeholder="例如 2000"><span class="unit">元/日</span></div>
+    </div>
+
+    <div class="field">
+      <label>實支實付醫療額度<span class="hint">（住院雜費限額，每次最多賠多少）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="reimburse" inputmode="numeric" placeholder="例如 20"><span class="unit">萬元/次</span></div>
+    </div>
+
+    <div class="field">
+      <label>保單有理賠「門診手術」嗎？</label>
+      <div class="choice" id="opChoice">
+        <button data-v="有">有</button>
+        <button data-v="沒有">沒有</button>
+        <button data-v="不確定">不確定</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>重大傷病一次給付保額</label>
+      <div class="unit-row"><input type="number" min="0" id="majorCover" inputmode="numeric" placeholder="例如 100"><span class="unit">萬元</span></div>
+    </div>
+
+    <div class="field">
+      <label>癌症一次給付保額</label>
+      <div class="unit-row"><input type="number" min="0" id="cancerCover" inputmode="numeric" placeholder="例如 100"><span class="unit">萬元</span></div>
+    </div>
+
+    <div class="field">
+      <label>長照險每月給付<span class="hint">（長照／殘扶險，失能或需長期照顧時每月領的，沒有填 0）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="ltcMonthly" inputmode="numeric" placeholder="例如 3"><span class="unit">萬元/月</span></div>
+    </div>
+
+    <div class="field">
+      <label>是否已做資產傳承或稅源規劃？<span class="hint">（遺囑、保險指定受益人、信託等）</span></label>
+      <div class="choice" id="legacyChoice">
+        <button data-v="有">有</button>
+        <button data-v="沒有">沒有</button>
+        <button data-v="不確定">不確定</button>
+      </div>
+    </div>
+    </div><!-- /coverFields -->
+
+    <div class="field" id="retireMonthlyField" style="display:none">
+      <label>退休後每月理想生活費<span class="hint">（你認為退休後一個月要有多少錢，才符合你想要的生活）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="retireMonthly" inputmode="numeric" placeholder="例如 4"><span class="unit">萬元/月</span></div>
+    </div>
+
+    <div class="field" id="retireSavedField" style="display:none">
+      <label>退休後生活金<span class="hint">（已準備好供退休後生活使用的錢：年金險、儲蓄險、定存等，投資已另計）</span></label>
+      <div class="unit-row"><input type="number" min="0" id="retireSaved" inputmode="numeric" placeholder="例如 50"><span class="unit">萬元</span></div>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="go(2)">上一步</button>
+      <button class="btn btn-main" id="step3next" onclick="go(4)" style="display:none">下一步</button>
+    </div>
+  </section>
+
+  <!-- STEP 4 聯絡方式與個資同意 -->
+  <section class="card hidden" id="step4">
+    <h2>④ 留下 LINE ID，看你的專屬報告</h2>
+    <div class="sub">這份報告會幫你看懂自己目前的保障與風險缺口。留下 LINE ID 後，顧問也能免費協助你解讀結果——<b>純粹幫你看清楚，絕不強迫推銷</b>。</div>
+
+    <div class="field">
+      <label>LINE ID</label>
+      <input type="text" id="lineId" placeholder="例如 anken123">
+    </div>
+
+    <div class="field" id="consentField">
+      <label>個人資料蒐集、處理及利用告知事項</label>
+      <div class="consent-box">
+        依據個人資料保護法第 8 條規定，向您告知下列事項：<br><br>
+        <b>一、蒐集者：</b>【李羿澄／智匯保險經紀人股份有限公司】（以下簡稱本人）<br>
+        <b>二、蒐集目的：</b>保險商品與理財規劃之需求分析、諮詢服務、行銷及客戶聯繫。<br>
+        <b>三、個人資料類別：</b>姓名、性別、年齡、婚姻與扶養狀況、LINE ID、財務概況與保障現況等本表單所填資料。<br>
+        <b>四、利用期間：</b>自蒐集日起至蒐集目的消失，或您要求停止利用之日止。<br>
+        <b>五、利用地區：</b>中華民國境內。<br>
+        <b>六、利用對象與方式：</b>僅由本人於上述目的範圍內，以 LINE 方式與您聯繫，不會提供予其他第三人。<br>
+        <b>七、您的權利：</b>依個資法第 3 條，您得隨時向本人請求查詢、閱覽、複製、補充、更正、停止蒐集處理利用或刪除您的個人資料；您也可以隨時告知本人停止聯繫。<br>
+        <b>八、</b>您可自由選擇是否提供個人資料；惟若不提供，本人將無法為您產生並解讀這份風險報告。
+      </div>
+      <label class="consent-check">
+        <input type="checkbox" id="consent">
+        <span>我已閱讀並同意上述告知事項，同意提供我的個人資料供顧問於上述目的範圍內使用。</span>
+      </label>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="go(3)">上一步</button>
+      <button class="btn btn-main" onclick="calc()">查看我的風險報告 →</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="hidden" id="result">
+    <div class="score-card">
+      <div class="lab" id="resultName">你的五大需求防護分數</div>
+      <div class="score-num"><span id="scoreNum">0</span><small> / 100</small></div>
+      <div class="score-msg" id="scoreMsg"></div>
+      <div class="gap-total">保障・退休・理財・傳承資金缺口合計約 <b id="totalGap">0</b> 萬元<br><span style="font-size:11.5px;opacity:.7">醫療層因各險種理賠方式不同，採逐項檢核呈現</span></div>
+    </div>
+
+    <div class="pyramid-card">
+      <h3>你的人生五大需求金字塔</h3>
+      <div class="sub">由下往上打地基：先醫療保障，再退休理財，最後傳承</div>
+      <div id="pyramidBox"></div>
+      <div class="legend">
+        <span><i style="background:var(--ok)"></i>防護充足</span>
+        <span><i style="background:var(--warn)"></i>部分防護</span>
+        <span><i style="background:var(--bad)"></i>缺口較大</span>
+      </div>
+    </div>
+
+    <div id="riskList"></div>
+
+    <div class="cta">
+      <h3>缺口怎麼補？順序很重要</h3>
+      <p>金字塔要從底層開始補，先顧好醫療與保障，理財和傳承才站得穩。<br>加顧問 LINE 並貼上這份報告，我幫你排出最省力的補強順序。</p>
+      <button class="btn btn-line" onclick="shareLine()" id="lineBtn">加顧問 LINE，傳送我的報告</button>
+      <button class="btn btn-ghost" onclick="copyResult()" id="copyBtn">只複製我的風險報告</button>
+    </div>
+
+    <div class="nav" style="margin-top:14px">
+      <button class="btn btn-ghost" onclick="backToForm()">← 回上一步修改</button>
+      <button class="btn btn-ghost" onclick="location.reload()">重新試算</button>
+    </div>
+
+    <p class="disclaimer">本工具為簡易需求分析，採一般通用假設（退休年齡 65 歲、平均餘命 85 歲、遺產稅以基本免稅額概算），結果僅供參考，實際規劃請與專業顧問討論。</p>
+  </section>
+
+</div>
+
+<script>
+/* ====== 顧問設定（上線前請修改）====== */
+const ADVISOR_NAME = "你的顧問安肯";
+const LINE_ID_URL  = "https://line.me/ti/p/KopzsUvXEg";   // 你的 LINE 加好友連結
+const GAS_URL      = "https://script.google.com/macros/s/AKfycbwRANXRPv2X8u_TorUdjVtuGH60oygZ8E3BR_AgKowpbEvxB0V559I4S5V3j9oKQWqe/exec";  // ← 貼上 Google Apps Script 網路應用程式網址，留空則不上傳資料
+/* ======================================= */
+
+let gender=null, marry=null, dependents=null, legacy=null, surgery=null, knowCover=null;
+
+function bindChoice(id, cb){
+  document.querySelectorAll('#'+id+' button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+      cb(b.dataset.v);
+    });
+  });
+}
+bindChoice('genderChoice', v=>gender=v);
+bindChoice('marryChoice',  v=>marry=v);
+bindChoice('depChoice',    v=>{ dependents=+v; document.getElementById('supportField').style.display = dependents>0?'':'none'; });
+bindChoice('legacyChoice', v=>legacy=v);
+bindChoice('opChoice',     v=>surgery=v);
+bindChoice('knowChoice',   v=>{
+  knowCover=v;
+  const fields=document.getElementById('coverFields');
+  const hint=document.getElementById('knowHint');
+  const next=document.getElementById('step3next');
+  const rm=document.getElementById('retireMonthlyField');
+  const rs=document.getElementById('retireSavedField');
+  next.style.display='';   // 兩種情況都顯示下一步
+  if(v==='清楚'){
+    fields.style.display='';
+    rm.style.display=''; rs.style.display='';
+    hint.style.display='none';
+    surgery=surgery||null; legacy=legacy||null;
+  }else{
+    // 不太清楚：保單細節全部當 0、門診手術與傳承視為不確定，退休兩欄仍詢問
+    fields.style.display='none';
+    rm.style.display=''; rs.style.display='';
+    hint.style.display='';
+    hint.innerHTML='沒關係，這代表你很可能正需要一次完整的保單健診。我們先以「目前無保障」估算，幫你看出風險全貌，細節之後再由顧問協助盤點。';
+    ['lifeCover','medDaily','reimburse','majorCover','cancerCover','accCover','accDaily','accReimb','ltcMonthly'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=0; });
+    surgery='不確定'; legacy='不確定';
+  }
+});
+
+function num(id){ const v=parseFloat(document.getElementById(id).value); return isNaN(v)?0:Math.max(v,0); }
+
+/* 數字欄位防呆：擋掉負號與 e，輸入負值自動歸零 */
+document.querySelectorAll('input[type=number]').forEach(inp=>{
+  inp.addEventListener('keydown',e=>{
+    if(['-','e','E','+'].includes(e.key)) e.preventDefault();
+  });
+  inp.addEventListener('input',()=>{
+    if(inp.value!=='' && parseFloat(inp.value)<0) inp.value=0;
+  });
+});
+function txt(id){ return document.getElementById(id).value.trim(); }
+function f(n){ return Math.round(n).toLocaleString('zh-TW'); }
+
+function go(n){
+  if(n===2){
+    if(!txt('name')){ alert('請先填寫姓名或稱呼喔！'); return; }
+    if(!gender){ alert('請選擇性別'); return; }
+    if(!num('age')){ alert('請填寫年齡'); return; }
+    if(!marry){ alert('請選擇婚姻狀況'); return; }
+    if(dependents===null){ alert('請選擇是否有扶養家人'); return; }
+  }
+  if(n===3){
+    if(!num('income')||!num('expense')){ alert('請填年收入與每月開銷，這是計算的基礎喔！'); return; }
+  }
+  if(n===4){
+    if(!knowCover){ alert('請先選擇「你清楚了解自己目前的保障內容嗎？」'); return; }
+    if(knowCover==='清楚'){
+      if(!surgery){ alert('請選擇保單是否有理賠門診手術'); return; }
+      if(!legacy){ alert('請選擇是否已做傳承規劃'); return; }
+    }
+  }
+  [1,2,3,4].forEach(i=>document.getElementById('step'+i).classList.toggle('hidden', i!==n));
+  document.querySelectorAll('#steps span').forEach((s,i)=>s.classList.toggle('on', i<n));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+let report=null;
+
+/* 各層真實數據與案例（每層都會顯示，來源皆可點擊查證） */
+const CASES={
+ '醫療':[
+  {t:'國健署最新癌症登記報告：台灣每年新發癌症已超過 13 萬人，平均約每 4 分鐘就有 1 人罹癌。整體發生年齡中位數是 64 歲，但乳癌 57 歲、甲狀腺癌 50 歲——中壯年就可能遇上。',s:'衛福部國民健康署',u:'https://www.hpa.gov.tw/Pages/Detail.aspx?nodeid=4809&pid=18699'},
+  {t:'健保署統計：住院期間將近 5 成的支出是自費藥物、耗材等「醫療雜費」，比病房費和手術費都高——這正是實支實付要扛的錢，只有日額型保單會完全接不住。',s:'健保署統計（安達人壽整理）',u:'https://esales.chubblife.com.tw/pz/blog/insurance/knowledge/to-know-surgical-insurance'},
+  {t:'醫療趨勢：微創、雷射等越來越多手術改在門診完成、當天回家。若保單只賠「住院手術」，這些常見手術可能一毛都領不到。',s:'InsFeel 保險感',u:'https://www.insfeel.com.tw/article/%E9%96%80%E8%A8%BA%E6%89%8B%E8%A1%93-%E5%81%A5%E4%BF%9D227-%E5%AF%A6%E6%94%AF%E5%AF%A6%E4%BB%98'},
+  {t:'家庭照顧者關懷總會調查：一段照顧歷程平均 9.9 年，甚至有長達 30 多年的案例；家庭照顧支出每月平均 3～7 萬元，是一場「看不到盡頭的馬拉松」，愈到後面愈花錢。',s:'中華民國家庭照顧者關懷總會',u:'https://www.familycares.com.tw/intro.php'}
+ ],
+ '保障':[
+  {t:'家中主要收入者若倒下，收入歸零但責任不會：以平均月薪換算，一年的家庭經濟缺口就是數十萬起跳，房貸、學費、生活費都不會暫停。壽險保額「年薪×10」的意義，就是替「萬一的你」再撐家人十年。',s:'行政院主計總處薪資統計',u:'https://www.dgbas.gov.tw/'}
+ ],
+ '退休規劃':[
+  {t:'退休後若需要照護，長照中心、養護機構等費用每月約 2.5～8 萬元——而且這筆錢是在日常生活費「之外」另外發生的隱形支出。退休金沒有把這塊算進去，常常是最大的破口。',s:'中國信託銀行・樂活享退',u:'https://www.ctbc-retirement.com/article/555'}
+ ],
+ '理財':[
+  {t:'沒有 6 個月緊急預備金的人，遇到突發醫療或失業時，常被迫在市場低點賣股票、解約保單變現——等於把長期投資的成果折價出場。預備金和保障，就是讓你的投資「不被中斷」的防護罩。',s:'常見理財情境',u:''}
+ ],
+ '傳承':[
+  {t:'真實案例：林董擁有近 10 億元不動產，生前未做遺產規劃就驟逝，家人拿不出 1.8 億現金繳遺產稅；又因沒有完稅證明無法繼承、無法賣地，只能用「公告現值 3 億」的土地抵繳——市價 10 億的土地，超過一半就這樣沒了。專家建議：財產超過 2 千萬就該預留稅源，首選工具是壽險。',s:'旺得富理財網（中時新聞網）',u:'https://wantrich.chinatimes.com/news/20240822900451-420501'},
+  {t:'「留房卻付不起遺產稅」是大繼承時代最常見的困境：國稅局只收現金，繼承人若拿不出來，可能得急售房產，或用公告現值抵繳——形同打折賣給政府。',s:'聯合新聞網・橘世代',u:'https://orange.udn.com/orange/story/121200/9509213'},
+  {t:'研究指出，約 6 成家庭傳承失敗的原因是「溝通破裂」：父母怕孩子吵所以不講，孩子怕被說貪所以不問。提早規劃，是替家人省下一場戰爭。',s:'聯合新聞網・橘世代（引商周研究）',u:'https://orange.udn.com/orange/story/121200/9509213'}
+ ]
+};
+
+function calc(){
+  const lineId=txt('lineId');
+  const consented=document.getElementById('consent').checked;
+  if(!lineId){ alert('請填寫 LINE ID，才能為你產生專屬報告喔！'); return; }
+  if(!consented){ alert('請先閱讀並勾選同意個資告知事項'); return; }
+  const withConsent=true;
+
+  const age=num('age'), supportYears=dependents>0?(num('supportYears')||20):0;
+  const income=num('income'), expense=num('expense');
+  const savings=num('savings'), invest=num('invest'), passive=num('passive');
+  const investYearly=num('investYearly'), premiumYearly=num('premiumYearly');
+  const estate=num('estate'), debt=num('debt');
+  const lifeCover=num('lifeCover'), medDaily=num('medDaily');
+  const accCover=num('accCover'), accDaily=num('accDaily'), accReimb=num('accReimb');
+  const reimburse=num('reimburse'), majorCover=num('majorCover'), cancerCover=num('cancerCover');
+  const ltcMonthly=num('ltcMonthly'), retireSaved=num('retireSaved'), retireMonthly=num('retireMonthly');
+  const liquidAssets=savings+invest;
+
+  const levels=[];
+
+  /* ── 第 1 層：醫療（醫療品質＋收入不中斷＋意外＋長照）── */
+  {
+    const rDaily=Math.min(medDaily/5000,1);          // 日額建議 5,000：生活開銷＋工作損失＋住院費用
+    const rReimburse=Math.min(reimburse/20,1);       // 實支實付建議 20 萬/次
+    const rSurgery=surgery==='有'?1:surgery==='不確定'?0.5:0;
+    const rAccLife=Math.min(accCover/100,1);         // 意外壽險建議 100 萬
+    const rAccDaily=Math.min(accDaily/1000,1);       // 意外日額建議 1,000
+    const rAccReimb=Math.min(accReimb/5,1);          // 意外實支建議 5 萬/次
+    const rMajor=Math.min(majorCover/100,1);         // 重大傷病最少 100 萬
+    const rCancer=Math.min(cancerCover/100,1);       // 癌症一次金最少 100 萬
+    const ltcNeedM=5;                                 // 長照每月需求以 5 萬計（家總統計每月 3~7 萬取中）
+    const rLTC=Math.min(ltcMonthly/ltcNeedM,1);
+    const ratio=(rDaily+rReimburse+rSurgery+rAccLife+rAccDaily+rAccReimb+rMajor+rCancer+rLTC)/9;
+
+    /* 醫療層不以金額計缺口（各險種理賠方式不同），改為逐項檢核 */
+    const items=[];
+    if(medDaily<5000)   items.push(`住院日額還差 <b>${f(5000-medDaily)} 元/日</b>（建議 5,000）`);
+    if(reimburse<20)    items.push(`實支實付還差 <b>${f(20-reimburse)} 萬/次</b>（建議 20 萬）`);
+    if(surgery==='沒有') items.push(`<b>門診手術沒有理賠</b>——很多手術已改在門診完成，建議補上`);
+    if(surgery==='不確定') items.push(`門診手術理賠不確定，建議調出保單確認`);
+    if(accCover<100)    items.push(`意外壽險還差 <b>${f(100-accCover)} 萬</b>（建議 100 萬）`);
+    if(accDaily<1000)   items.push(`意外住院日額還差 <b>${f(1000-accDaily)} 元/日</b>（建議 1,000）`);
+    if(accReimb<5)      items.push(`意外實支實付還差 <b>${f(5-accReimb)} 萬/次</b>（建議 5 萬）`);
+    if(majorCover<100)  items.push(`重大傷病還差 <b>${f(100-majorCover)} 萬</b>（最少 100 萬）`);
+    if(cancerCover<100) items.push(`癌症一次金還差 <b>${f(100-cancerCover)} 萬</b>（最少 100 萬）`);
+    if(ltcMonthly<5)    items.push(`長照月給付還差 <b>${f(5-ltcMonthly)} 萬/月</b>（每月需求約 5 萬）`);
+
+    levels.push({lv:'第1層',name:'醫療',ratio,gap:0,items,
+      why:`先保證「醫療品質」與「收入不中斷」。這層檢查 5 組指標：① 住院日額（生活開銷＋工作損失＋住院費用）② 實支實付與門診手術 ③ 意外三寶（意外壽險、意外日額、意外實支）④ 重大傷病與癌症一次金 ⑤ 長照——失能險已停售，長照風險現在主要靠長照險承接。因為各險種理賠方式不同，這層不以單一金額計算缺口，請看下方的逐項清單。`});
+  }
+
+  /* ── 第 2 層：保障（壽險＝年薪×10 與家庭責任法取高者）── */
+  {
+    const byIncome=income*10;
+    const byDuty=Math.max(expense*12*supportYears+debt-liquidAssets,0);
+    const lifeNeed=Math.max(byIncome,byDuty,50);
+    const ratio=lifeNeed===0?1:Math.min(lifeCover/lifeNeed,1);
+    const gap=Math.max(lifeNeed-lifeCover,0);
+    levels.push({lv:'第2層',name:'保障',ratio,gap,
+      why:`「我平安，照顧你一輩子；我不平安，一樣照顧你一輩子。」壽險保額有兩種算法：① 收入替代法＝<b>年薪 × 10 年</b> ＝ ${f(byIncome)} 萬，代表就算你不在，收入仍能撐家人 10 年；② 家庭責任法＝家人 ${supportYears>0?supportYears+' 年':'未來'}生活費＋負債−存款與投資 ＝ ${f(byDuty)} 萬。兩者取高，你的標準是 <b>${f(lifeNeed)} 萬</b>，目前壽險 ${f(lifeCover)} 萬${gap>0?`，<b>差額 ${f(gap)} 萬就是要補的</b>`:'，已達標 ✓'}。`});
+  }
+
+  /* ── 第 3 層：退休規劃 ── */
+  {
+    const monthlyNeed=retireMonthly>0?retireMonthly:expense*0.8;
+    const socialMonthly=Math.min(income/12*0.35,3);
+    const gapM=Math.max(monthlyNeed-socialMonthly,0);
+    const need=gapM*12*20;
+    const have=retireSaved+invest*0.7;   // 投資資產 7 成視為可留作退休
+    const ratio=need===0?1:Math.min(have/need,1);
+    levels.push({lv:'第3層',name:'退休規劃',ratio,gap:Math.max(need-have,0),
+      why:`活到 90 歲不是長壽，是常態。${retireMonthly>0?`你設定退休後每月想要 <b>${f(monthlyNeed)} 萬</b>的生活`:`以目前開銷 8 成估計，退休後每月約需 ${f(monthlyNeed)} 萬`}，扣除勞保勞退粗估月領 ${f(socialMonthly)} 萬，20 年共需自備約 <b>${f(need)} 萬</b>。目前退休後生活金 ${f(retireSaved)} 萬＋投資資產 7 成 ${f(invest*0.7)} 萬，合計 ${f(have)} 萬。`});
+  }
+
+  /* ── 第 4 層：理財（年薪 30% 投入投資理財）── */
+  {
+    const investTarget=income*0.3;
+    const rInvest=investTarget===0?1:Math.min(investYearly/investTarget,1);
+    const emergencyNeed=expense*6;
+    const rEmg=emergencyNeed===0?1:Math.min(savings/emergencyNeed,1);
+    const annualExpense=expense*12;
+    const rPassive=annualExpense===0?1:Math.min(passive/annualExpense,1);
+    const ratio=rInvest*0.5+rEmg*0.25+rPassive*0.25;
+    const gap=Math.max(investTarget-investYearly,0)+Math.max(emergencyNeed-savings,0);
+    levels.push({lv:'第4層',name:'理財',ratio,gap,
+      why:`理財金三角原則：<b>年收入的 30% 投入投資理財</b>，目標讓理財賺的錢大於工作賺的錢。你的目標是每年投入 <b>${f(investTarget)} 萬</b>，目前投入 ${f(investYearly)} 萬${investYearly<investTarget?`，<b>每年差 ${f(investTarget-investYearly)} 萬</b>`:' ✓'}。緊急預備金建議 6 個月開銷約 ${f(emergencyNeed)} 萬（目前現金 ${f(savings)} 萬）；被動收入每年 ${f(passive)} 萬，已覆蓋年支出的 <b>${Math.round(rPassive*100)}%</b>——到 100% 就是財富自由。記得第 1、2 層防護罩要先架好，投資才不會被迫中斷。`});
+  }
+
+  /* ── 第 5 層：傳承（總資產−免稅額，依級距概算稅源）── */
+  {
+    const totalAssets=savings+invest+estate;   // 動產＋不動產
+    const taxFree=1333;
+    let ratio, gap=0, why;
+    if(totalAssets<=taxFree){
+      ratio=0.9;
+      why=`動產＋不動產總資產約 ${f(totalAssets)} 萬，在遺產稅基本免稅額 1,333 萬內，這個階段以累積資產為主。但「會打算比努力重要」——可先用保險指定受益人，確保資產直接照你的意願走。`;
+    }else{
+      const net=totalAssets-taxFree;
+      let estTax;
+      if(net<=5621) estTax=net*0.1;
+      else if(net<=11242) estTax=562.1+(net-5621)*0.15;
+      else estTax=1405.25+(net-11242)*0.2;
+      gap = legacy==='有' ? 0 : estTax;
+      ratio = legacy==='有' ? 0.85 : legacy==='不確定' ? 0.4 : 0.25;
+      const tail = legacy==='有'
+        ? '你已有規劃，建議定期檢視受益人與額度是否跟上資產成長。'
+        : legacy==='不確定'
+        ? '你不確定自己有沒有規劃——這本身就是一個訊號，建議先盤點保單受益人與資產配置。'
+        : '目前尚未準備稅源，家人未來可能需要先「籌現金繳稅」才能繼承資產——財富沒做好傳承，人生就是白忙一場。';
+      why=`計算方式：（動產＋不動產 ${f(totalAssets)} 萬 − 免稅額 1,333 萬）依 10%／15%／20% 級距概算，潛在遺產稅約 <b>${f(estTax)} 萬</b>——這就是建議用<b>壽險預留的稅源額度</b>：壽險理賠金可指定受益人、不計入遺產總額，且不用等完稅就理賠，家人才有現金繳稅。${tail}`;
+    }
+    levels.push({lv:'第5層',name:'傳承',ratio,gap,why});
+  }
+
+  const weights=[25,25,20,20,10];
+  const score=Math.round(levels.reduce((s,l,i)=>s+l.ratio*weights[i],0));
+  const totalGap=levels.reduce((s,l)=>s+l.gap,0);
+
+  report={
+    name:txt('name'), gender, age, marry, dependents, supportYears,
+    lineId:withConsent?lineId:'',
+    consent:withConsent?'是':'否',
+    income, expense, savings, invest, passive, investYearly, premiumYearly, estate, debt,
+    lifeCover, medDaily, reimburse, surgery, accCover, accDaily, accReimb,
+    majorCover, cancerCover, ltcMonthly, retireSaved, retireMonthly, legacy, knowCover,
+    levels, score, totalGap
+  };
+
+  if(withConsent) submitToSheet();
+  render();
+}
+
+/* 上傳到 Google Sheets（Apps Script） */
+function submitToSheet(){
+  if(!GAS_URL) return;
+  const r=report;
+  const payload={
+    name:r.name, gender:r.gender, age:r.age, marry:r.marry,
+    dependents:r.dependents, lineId:r.lineId, consent:r.consent,
+    income:r.income, expense:r.expense, savings:r.savings, invest:r.invest,
+    passive:r.passive, investYearly:r.investYearly, premiumYearly:r.premiumYearly,
+    estate:r.estate, debt:r.debt,
+    lifeCover:r.lifeCover, medDaily:r.medDaily, reimburse:r.reimburse, surgery:r.surgery,
+    accCover:r.accCover, accDaily:r.accDaily, accReimb:r.accReimb,
+    majorCover:r.majorCover, cancerCover:r.cancerCover,
+    ltcMonthly:r.ltcMonthly, retireSaved:r.retireSaved, retireMonthly:r.retireMonthly,
+    legacy:r.legacy, knowCover:r.knowCover, score:r.score, totalGap:Math.round(r.totalGap),
+    ratios:r.levels.map(l=>Math.round(l.ratio*100)).join(' / ')
+  };
+  fetch(GAS_URL,{
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify(payload)
+  }).catch(()=>{});
+}
+
+function colorOf(ratio){
+  return ratio>=0.8?'var(--ok)':ratio>=0.4?'var(--warn)':'var(--bad)';
+}
+
+function render(){
+  [1,2,3,4].forEach(i=>document.getElementById('step'+i).classList.add('hidden'));
+  document.getElementById('steps').classList.add('hidden');
+  document.getElementById('result').classList.remove('hidden');
+
+  const {name, levels, score, totalGap}=report;
+  document.getElementById('resultName').textContent=`${name} 的五大需求防護分數`;
+  document.getElementById('scoreNum').textContent=score;
+  document.getElementById('totalGap').textContent=f(totalGap);
+  document.getElementById('scoreMsg').textContent=
+    score>=80?'金字塔相當穩固，做最後微調就好 👍':
+    score>=55?'有基礎，但有幾層需要優先補強':
+              '地基還不穩，建議從底層開始盡快補強';
+
+  /* 金字塔 SVG：由下往上 醫療→保障→退休→理財→傳承 */
+  /* 金字塔 SVG：尖頂造型，標籤置於右側 */
+  const svgNS='http://www.w3.org/2000/svg';
+  const W=330, topY=10, botY=238, apexHW=2, baseHW=105, cx=112;
+  const hw=y=>apexHW+(baseHW-apexHW)*(y-topY)/(botY-topY);
+  const layerH=(botY-topY-4*3)/5;
+  let svg=`<svg viewBox="0 0 ${W} 248" xmlns="${svgNS}" style="max-width:350px;width:100%">`;
+  for(let i=0;i<5;i++){ // i=0 為最上層(傳承=levels[4])
+    const lv=levels[4-i];
+    const yt=topY+i*(layerH+3), yb=yt+layerH, ym=(yt+yb)/2;
+    const hwt=hw(yt), hwb=hw(yb);
+    const col=colorOf(lv.ratio);
+    svg+=`<polygon points="${cx-hwt},${yt} ${cx+hwt},${yt} ${cx+hwb},${yb} ${cx-hwb},${yb}" fill="${col}" opacity="0.9"/>`;
+    const edgeX=cx+hw(ym);
+    svg+=`<line x1="${edgeX+5}" y1="${ym}" x2="226" y2="${ym}" stroke="${col}" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+    svg+=`<text x="232" y="${ym+5}" text-anchor="start" font-size="14" font-weight="700" fill="${col}">${lv.name} ${Math.round(lv.ratio*100)}%</text>`;
+  }
+  svg+=`</svg>`;
+  document.getElementById('pyramidBox').innerHTML=svg;
+
+
+  const list=document.getElementById('riskList');
+  list.innerHTML='';
+  levels.forEach(l=>{
+    const pct=Math.round(l.ratio*100);
+    const tag=l.ratio>=0.8?['ok','防護充足']:l.ratio>=0.4?['warn','部分防護']:['bad','缺口較大'];
+    const cs=CASES[l.name]||[];
+    let caseHtml='';
+    if(cs.length){
+      caseHtml=`<details class="cases"><summary>📰 真實數據與案例：少了這塊，風險在哪？</summary>`+
+        cs.map(c=>`<div class="case"><p>${c.t}</p>${c.u?`<a href="${c.u}" target="_blank" rel="noopener">資料來源：${c.s} ↗</a>`:`<span class="src">${c.s}</span>`}</div>`).join('')+
+        `</details>`;
+    }
+    const fixHtml = l.items && l.items.length
+      ? `<div class="fixlist"><div class="fix-title">🔧 待補強清單（${l.items.length} 項）</div>`+l.items.map(t=>`<div class="fix-item">・${t}</div>`).join('')+`</div>`
+      : '';
+    const gapLabel = l.items
+      ? (l.items.length ? `${l.items.length} 項待補強` : '各項達標 ✓')
+      : (l.gap>0 ? `缺口約 ${f(l.gap)} 萬` : '已補足');
+    const el=document.createElement('div');
+    el.className='risk';
+    el.innerHTML=`
+      <div class="risk-head">
+        <span class="name"><span class="lv">${l.lv}</span>${l.name}</span>
+        <span class="tag ${tag[0]}">${tag[1]}</span>
+      </div>
+      <div class="bar"><i style="width:0%"></i></div>
+      <div class="nums"><span>防護力 ${pct}%</span><span>${gapLabel}</span></div>
+      <div class="why">${l.why}</div>
+      ${fixHtml}
+      ${caseHtml}`;
+    list.appendChild(el);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{el.querySelector('.bar i').style.width=pct+'%';}));
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function buildText(){
+  const {name, age, levels, score, totalGap}=report;
+  let t=`📋 ${name} 的人生五大需求試算\n年齡 ${age} 歲｜防護分數 ${score}/100\n保障・退休・理財・傳承缺口合計約 ${f(totalGap)} 萬元\n\n`;
+  levels.forEach(l=>{
+    const tail = l.items
+      ? (l.items.length ? `（${l.items.length} 項待補強）` : '（各項達標）')
+      : (l.gap>0 ? `（缺口約 ${f(l.gap)} 萬）` : '（已補足）');
+    t+=`・${l.name}：防護力 ${Math.round(l.ratio*100)}%${tail}\n`;
+  });
+  t+=`\n想請${ADVISOR_NAME}幫我看看補強順序 🙏`;
+  return t;
+}
+
+function shareLine(){
+  // 1. 先把報告複製到剪貼簿（加好友後貼上即可）
+  try{ navigator.clipboard.writeText(buildText()); }catch(e){}
+  const b=document.getElementById('lineBtn');
+  if(b){ b.textContent='✓ 報告已複製！加好友後貼上即可'; setTimeout(()=>b.textContent='加顧問 LINE，傳送我的報告',4000); }
+
+  const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(isMobile){
+    // 手機：直接開加好友連結，喚起 LINE App
+    window.location.href=LINE_ID_URL;
+    return;
+  }
+  // 電腦：先試喚起 LINE 桌面版（line:// 協定），1.5 秒沒反應就跳 QR 網頁
+  const idMatch=LINE_ID_URL.match(/p\/(~?[^/?]+)/);
+  let opened=false;
+  const onHide=()=>{ opened=true; };
+  document.addEventListener('visibilitychange', onHide);
+  if(idMatch){
+    try{ window.location.href='line://ti/p/'+idMatch[1]; }catch(e){}
+  }
+  setTimeout(()=>{
+    document.removeEventListener('visibilitychange', onHide);
+    if(!opened){ window.open(LINE_ID_URL,'_blank'); }  // 沒裝 LINE 桌面版 → 開 QR 加好友頁
+  },1500);
+}
+
+function backToForm(){
+  document.getElementById('result').classList.add('hidden');
+  document.getElementById('steps').classList.remove('hidden');
+  go(4);  // 所有填過的資料都還在，可從第四步往回修改
+}
+
+function copyResult(){
+  navigator.clipboard.writeText(buildText()).then(()=>{
+    const b=document.getElementById('copyBtn');
+    b.textContent='✓ 已複製，貼上傳給顧問吧！';
+    setTimeout(()=>b.textContent='只複製我的風險報告',2500);
+  }).catch(()=>alert('複製失敗，請截圖傳送'));
+}
+</script>
+</body>
+</html>
