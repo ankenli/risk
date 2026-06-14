@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>顧問後台・客戶風險分析</title>
+<style>
+:root{
+  --ink:#16324F; --ink-soft:#5A6B7B; --bg:#EEF1F4; --card:#FFFFFF; --line:#DDE5EB;
+  --ok:#2C8C82; --warn:#E8A33D; --bad:#D95D4E; --accent:#16324F;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+
+/* lock screen */
+.lock{position:fixed;inset:0;background:linear-gradient(135deg,#16324F,#0E2235);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px}
+.lock-box{background:var(--card);border-radius:18px;padding:34px 28px;max-width:360px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.lock-icon{font-size:40px;margin-bottom:8px}
+.lock-box h1{font-size:21px;margin-bottom:4px}
+.lock-box p{font-size:13px;color:var(--ink-soft);margin-bottom:18px}
+.lock-box input{width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--line);border-radius:10px;text-align:center}
+.lock-box>button{width:100%;margin-top:14px;padding:13px;font-size:15px;font-weight:700;border:none;border-radius:10px;background:var(--ink);color:#fff;cursor:pointer}
+.lock-err{color:var(--bad);font-size:13px;margin-top:10px;min-height:18px}
+.lock-box details{margin-top:18px;text-align:left;font-size:12px;color:var(--ink-soft)}
+.lock-box summary{cursor:pointer;font-weight:600}
+.lock-box .mini{margin-top:8px;padding:7px 12px;font-size:12px;border:1.5px solid var(--line);border-radius:8px;background:#FBFCFD;cursor:pointer}
+.lock-box code{background:#EEF1F4;padding:1px 5px;border-radius:4px;font-size:11px}
+
+/* setup gate */
+.gate{max-width:460px;margin:60px auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 24px;display:none}
+.gate.show{display:block}
+.gate h1{font-size:20px;margin-bottom:6px}
+.gate p{font-size:13px;color:var(--ink-soft);margin-bottom:18px}
+.gate label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}
+.gate input{width:100%;padding:11px 13px;font-size:14px;border:1.5px solid var(--line);border-radius:9px}
+.gate button{width:100%;margin-top:18px;padding:13px;font-size:15px;font-weight:700;border:none;border-radius:10px;background:var(--ink);color:#fff;cursor:pointer}
+.gate .err{color:var(--bad);font-size:13px;margin-top:10px;min-height:18px}
+.gate details{margin-top:16px;font-size:12px;color:var(--ink-soft)}
+.gate summary{cursor:pointer;font-weight:600}
+
+/* app layout */
+.app{display:none;height:100vh;display:none;grid-template-columns:330px 1fr}
+.app.on{display:grid}
+.sidebar{background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;height:100vh}
+.side-head{padding:16px;border-bottom:1px solid var(--line)}
+.side-head h2{font-size:16px}
+.side-head .tools{display:flex;gap:8px;margin-top:10px}
+.side-head select,.side-head input{flex:1;padding:7px 9px;font-size:12.5px;border:1.5px solid var(--line);border-radius:8px;background:#FBFCFD}
+.side-head button{padding:7px 10px;font-size:12.5px;border:1.5px solid var(--line);border-radius:8px;background:#FBFCFD;cursor:pointer}
+.list{overflow-y:auto;flex:1}
+.client{padding:13px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s}
+.client:hover{background:#F4F7F9}
+.client.sel{background:#EBF1F4;border-left:3px solid var(--ink)}
+.client .top{display:flex;justify-content:space-between;align-items:center}
+.client .nm{font-weight:700;font-size:14.5px}
+.client .sc{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+.client .meta{font-size:11.5px;color:var(--ink-soft);margin-top:2px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
+
+.main{overflow-y:auto;height:100vh;padding:24px 28px 60px}
+.empty{color:var(--ink-soft);text-align:center;margin-top:120px;font-size:14px}
+.detail h1{font-size:22px;margin-bottom:2px}
+.detail .subline{font-size:13px;color:var(--ink-soft);margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 14px}
+.stat .k{font-size:11.5px;color:var(--ink-soft)}
+.stat .v{font-size:18px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+
+.section{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:18px 20px;margin-bottom:16px}
+.section h3{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.layer{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.layer .ln{width:64px;font-size:13px;font-weight:600}
+.layer .track{flex:1;height:9px;border-radius:5px;background:#EAEFF3;overflow:hidden}
+.layer .track i{display:block;height:100%;border-radius:5px}
+.layer .pc{width:42px;text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums}
+
+.prio{display:flex;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--line)}
+.prio:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.prio .rank{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.prio .body{font-size:13.5px}
+.prio .body b{color:var(--bad)}
+.prio .body .tip{color:var(--ink-soft);font-size:12.5px}
+
+.ai-btn{padding:12px 18px;font-size:14px;font-weight:700;border:none;border-radius:10px;background:linear-gradient(135deg,#16324F,#2C5578);color:#fff;cursor:pointer}
+.ai-btn:disabled{opacity:.5;cursor:wait}
+.ai-out{margin-top:14px;font-size:14px;white-space:pre-wrap;line-height:1.8}
+.ai-out.empty-hint{color:var(--ink-soft);font-size:13px}
+.copy-line{margin-top:10px;padding:8px 12px;font-size:12.5px;border:1.5px solid var(--line);border-radius:8px;background:#FBFCFD;cursor:pointer}
+.badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
+.badge.ok{background:rgba(44,140,130,.12);color:var(--ok)}
+.badge.warn{background:rgba(232,163,61,.15);color:#B07A1E}
+.badge.bad{background:rgba(217,93,78,.12);color:var(--bad)}
+@media(max-width:760px){ .app.on{grid-template-columns:1fr} .sidebar{height:auto;max-height:42vh} .main{height:auto} }
+</style>
+</head>
+<body>
+
+<!-- 密碼鎖：通過才顯示後台 -->
+<div class="lock" id="lock">
+  <div class="lock-box">
+    <div class="lock-icon">🔒</div>
+    <h1>顧問後台</h1>
+    <p>請輸入存取密碼</p>
+    <input id="pw" type="password" placeholder="密碼" onkeydown="if(event.key==='Enter')unlock()" autocomplete="current-password">
+    <button onclick="unlock()">解鎖</button>
+    <div class="lock-err" id="lockErr"></div>
+    <details>
+      <summary>第一次使用 / 想改密碼？</summary>
+      <p style="margin-top:8px">本頁用 SHA-256 雜湊保護，密碼不會以明文存在檔案裡。要設定或更改密碼：在密碼欄輸入你想要的新密碼後，按下方「產生雜湊」，把產生的字串貼回 HTML 檔案裡 <code>PW_HASH</code> 那一行，存檔即可。</p>
+      <button class="mini" onclick="makeHash()">產生雜湊</button>
+      <div id="hashOut" style="margin-top:8px;font-size:11px;word-break:break-all;color:var(--ink)"></div>
+    </details>
+  </div>
+</div>
+
+
+<!-- 設定門檻 -->
+<div class="gate" id="gate">
+  <h1>顧問後台登入</h1>
+  <p>這個頁面只給你自己用，會讀取 Google Sheets 的客戶資料並生成分析建議。</p>
+
+  <label>後台讀取網址（Apps Script 的 /exec 網址）</label>
+  <input id="https://script.google.com/macros/library/d/1DzGUi6UWRwHkxq9ejnffRUU-aIVx9m9USwuKi9Bwx-mrSqhHa1Ox5i0T/3">
+
+  <label>後台通行碼（Code.gs 裡設定的 ADMIN_TOKEN）</label>
+  <input id="token" type="password" placeholder="請輸入密碼">
+
+  <label>Claude API Key（生成 AI 建議用，sk-ant-...）</label>
+  <input id="apiKey" type="password" placeholder="sk-ant-...（不填也能用規則式分析）">
+
+  <button onclick="enter()">進入後台</button>
+  <div class="err" id="gateErr"></div>
+
+  <details>
+    <summary>資料安全說明</summary>
+    <p style="margin-top:8px">通行碼與 API Key 只會存在你這台裝置的瀏覽器（localStorage），不會上傳到任何第三方。客戶資料只在你的瀏覽器與 Google／Anthropic 之間傳輸。建議只在自己的私人電腦使用本頁。</p>
+  </details>
+</div>
+
+<!-- 主畫面 -->
+<div class="app" id="app">
+  <aside class="sidebar">
+    <div class="side-head">
+      <h2>客戶名單 <span id="count" style="font-size:12px;color:var(--ink-soft)"></span></h2>
+      <div class="tools">
+        <select id="sortBy" onchange="renderList()">
+          <option value="score">防護分數低→高</option>
+          <option value="time">最新填寫</option>
+          <option value="gap">缺口大→小</option>
+        </select>
+        <button onclick="loadData()">↻</button>
+      </div>
+      <div class="tools">
+        <input id="search" placeholder="搜尋姓名 / LINE ID" oninput="renderList()">
+      </div>
+    </div>
+    <div class="list" id="list"></div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="empty" id="empty">← 從左邊選一位客戶開始分析</div>
+    <div class="detail" id="detail" style="display:none"></div>
+  </main>
+</div>
+
+<script>
+/* ===== 存取密碼（SHA-256 雜湊）=====
+   預設密碼是 anken-change-me，請務必更改：
+   1. 打開本頁 → 密碼鎖的「第一次使用/想改密碼」
+   2. 輸入新密碼 → 按「產生雜湊」
+   3. 把產生的字串貼到下面這行的引號內，存檔
+*/
+const PW_HASH = '369b3fd7119217c47c336e004bce655c2f0fd0299c86a086be2ab6788c881312';
+
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function unlock(){
+  const pw=document.getElementById('pw').value;
+  const err=document.getElementById('lockErr');
+  if(!pw){ err.textContent='請輸入密碼'; return; }
+  const h=await sha256(pw);
+  if(h===PW_HASH){
+    sessionStorage.setItem('unlocked','1');
+    document.getElementById('lock').style.display='none';
+    document.getElementById('gate').classList.add('show');
+  }else{
+    err.textContent='密碼錯誤';
+    document.getElementById('pw').value='';
+  }
+}
+
+async function makeHash(){
+  const pw=document.getElementById('pw').value;
+  const out=document.getElementById('hashOut');
+  if(!pw){ out.textContent='請先在上面密碼欄輸入想要的新密碼'; return; }
+  const h=await sha256(pw);
+  out.innerHTML=`新雜湊（複製到 PW_HASH）：<br><b>${h}</b>`;
+}
+
+/* 同一個分頁解鎖過就不用再輸入 */
+window.addEventListener('DOMContentLoaded',()=>{
+  if(sessionStorage.getItem('unlocked')==='1'){
+    document.getElementById('lock').style.display='none';
+    document.getElementById('gate').classList.add('show');
+  }
+});
+
+const LS='advisor_backend_cfg';
+let CFG={gas:'',token:'',apiKey:''};
+let DATA=[], SEL=null;
+
+/* ---------- 登入 ---------- */
+window.addEventListener('load',()=>{
+  try{
+    const s=JSON.parse(localStorage.getItem(LS)||'{}');
+    if(s.gas){ document.getElementById('gasUrl').value=s.gas; }
+    if(s.token){ document.getElementById('token').value=s.token; }
+    if(s.apiKey){ document.getElementById('apiKey').value=s.apiKey; }
+  }catch(e){}
+});
+
+function enter(){
+  CFG.gas=document.getElementById('gasUrl').value.trim();
+  CFG.token=document.getElementById('token').value.trim();
+  CFG.apiKey=document.getElementById('apiKey').value.trim();
+  const err=document.getElementById('gateErr');
+  if(!CFG.gas||!CFG.token){ err.textContent='請填寫後台網址與通行碼'; return; }
+  localStorage.setItem(LS,JSON.stringify(CFG));
+  err.textContent='讀取中…';
+  loadData(true);
+}
+
+/* ---------- 讀取資料 ---------- */
+async function loadData(firstTime){
+  const err=document.getElementById('gateErr');
+  try{
+    const url=CFG.gas+(CFG.gas.includes('?')?'&':'?')+'token='+encodeURIComponent(CFG.token);
+    const res=await fetch(url);
+    const json=await res.json();
+    if(!json.ok){ if(err)err.textContent='讀取失敗：'+(json.error||'通行碼錯誤'); return; }
+    DATA=json.rows||[];
+    document.getElementById('gate').style.display='none';
+    document.getElementById('app').classList.add('on');
+    document.getElementById('count').textContent='（'+DATA.length+' 位）';
+    renderList();
+  }catch(e){
+    if(err)err.textContent='連線失敗，請確認網址正確且已部署為「所有人」可存取';
+  }
+}
+
+/* ---------- 工具 ---------- */
+const g=(o,k)=>{ const v=o[k]; return (v===''||v==null)?0:(isNaN(+v)?v:+v); };
+function scoreColor(s){ return s>=80?'var(--ok)':s>=55?'var(--warn)':'var(--bad)'; }
+function ratioColor(r){ return r>=80?'var(--ok)':r>=40?'var(--warn)':'var(--bad)'; }
+function parseRatios(str){ // "55 / 60 / 48 / 70 / 25"
+  const a=String(str||'').split('/').map(x=>parseInt(x.trim())||0);
+  return {醫:a[0]||0,保:a[1]||0,退:a[2]||0,理:a[3]||0,傳:a[4]||0};
+}
+
+/* ---------- 列表 ---------- */
+function renderList(){
+  const sort=document.getElementById('sortBy').value;
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  let rows=DATA.slice();
+  if(q) rows=rows.filter(r=>String(r['姓名']||'').toLowerCase().includes(q)||String(r['LINE ID']||'').toLowerCase().includes(q));
+  rows.sort((a,b)=>{
+    if(sort==='score') return g(a,'防護分數')-g(b,'防護分數');
+    if(sort==='gap')   return g(b,'總缺口(萬)')-g(a,'總缺口(萬)');
+    return new Date(b['填寫時間'])-new Date(a['填寫時間']);
+  });
+  const list=document.getElementById('list');
+  if(!rows.length){ list.innerHTML='<div style="padding:20px;color:var(--ink-soft);font-size:13px">沒有符合的客戶</div>'; return; }
+  list.innerHTML=rows.map(r=>{
+    const sc=g(r,'防護分數');
+    const sel=SEL&&SEL._row===r._row?'sel':'';
+    return `<div class="client ${sel}" onclick="select(${r._row})">
+      <div class="top"><span class="nm">${r['姓名']||'(未填名)'}</span>
+        <span class="sc" style="color:${scoreColor(sc)}">${sc}</span></div>
+      <div class="meta"><span class="dot" style="background:${scoreColor(sc)}"></span>${r['性別']||''} ${g(r,'年齡')}歲・缺口 ${g(r,'總缺口(萬)')}萬・${r['保障清楚度']||'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+function select(row){
+  SEL=DATA.find(r=>r._row===row);
+  renderList();
+  renderDetail();
+}
+
+/* ---------- 規則式分析 ---------- */
+function ruleAnalysis(r){
+  const R=parseRatios(r['五層防護力(醫/保/退/理/傳)']);
+  const prios=[];
+  const income=g(r,'年收入(萬)'), totalAssets=g(r,'現金存款(萬)')+g(r,'投資資產(萬)')+g(r,'不動產(萬)');
+
+  // 醫療逐項
+  const medFix=[];
+  if(g(r,'醫療日額(元)')<5000) medFix.push(`住院日額僅 ${g(r,'醫療日額(元)')} 元（建議 5,000）`);
+  if(g(r,'實支實付(萬/次)')<20) medFix.push(`實支實付僅 ${g(r,'實支實付(萬/次)')} 萬（建議 20）`);
+  if(g(r,'重大傷病(萬)')<100) medFix.push(`重大傷病 ${g(r,'重大傷病(萬)')} 萬（最少 100）`);
+  if(g(r,'癌症(萬)')<100) medFix.push(`癌症一次金 ${g(r,'癌症(萬)')} 萬（最少 100）`);
+  if(g(r,'長照月給付(萬)')<5) medFix.push(`長照月給付 ${g(r,'長照月給付(萬)')} 萬（每月需求約 5）`);
+  if(r['門診手術']==='沒有'||r['門診手術']==='不確定') medFix.push('門診手術理賠'+(r['門診手術']==='沒有'?'缺漏':'待確認'));
+
+  const cand=[
+    {layer:'醫療',r:R.醫,title:'醫療防護',detail:medFix.length?medFix.join('、'):'各項接近達標',
+     tip:'地基層，最優先。可從實支實付＋重大傷病＋癌症一次金切入，長照另案規劃。'},
+    {layer:'保障',r:R.保,title:'壽險保障',detail:`壽險 ${g(r,'壽險(萬)')} 萬，建議至少年薪 10 倍（約 ${income*10} 萬）`,
+     tip:'有扶養家人或房貸者必補，定期壽險槓桿最高。'},
+    {layer:'退休',r:R.退,title:'退休準備',detail:`理想月退 ${g(r,'退休理想月生活費(萬)')} 萬，現有退休金 ${g(r,'退休後生活金(萬)')} 萬`,
+     tip:'距離退休越遠越好談複利，年金險或投資型保單切入。'},
+    {layer:'理財',r:R.理,title:'投資理財',detail:`年投入 ${g(r,'年投資投入(萬)')} 萬（建議年薪 30%＝${Math.round(income*0.3)} 萬）`,
+     tip:'先確認緊急預備金足夠，再談被動收入累積。'},
+    {layer:'傳承',r:R.傳,title:'資產傳承',detail:totalAssets>1333?`總資產約 ${totalAssets} 萬已逾免稅額，傳承規劃：${r['傳承規劃']||'—'}`:`總資產約 ${totalAssets} 萬，暫以累積為主`,
+     tip:totalAssets>1333?'用壽險預留稅源，理賠金不計入遺產、不需完稅即理賠。':'資產達 2,000 萬以上再積極切入。'}
+  ];
+  // 防護力越低排越前；同分時依金字塔由下而上
+  const order={醫療:0,保障:1,退休:2,理財:3,傳承:4};
+  cand.sort((a,b)=> a.r-b.r || order[a.layer]-order[b.layer]);
+  return {ratios:R, prios:cand};
+}
+
+/* ---------- 明細畫面 ---------- */
+function renderDetail(){
+  const r=SEL;
+  document.getElementById('empty').style.display='none';
+  const d=document.getElementById('detail');
+  d.style.display='';
+  const sc=g(r,'防護分數');
+  const A=ruleAnalysis(r);
+  const R=A.ratios;
+  const layerRow=(name,val)=>`<div class="layer"><span class="ln">${name}</span>
+     <span class="track"><i style="width:${val}%;background:${ratioColor(val)}"></i></span>
+     <span class="pc">${val}%</span></div>`;
+
+  const prioHtml=A.prios.slice(0,3).map((p,i)=>`<div class="prio">
+     <span class="rank">${i+1}</span>
+     <div class="body"><b>${p.title}（防護力 ${p.r}%）</b><br>${p.detail}<br><span class="tip">👉 ${p.tip}</span></div>
+   </div>`).join('');
+
+  d.innerHTML=`
+    <h1>${r['姓名']||'(未填名)'} <span class="badge ${sc>=80?'ok':sc>=55?'warn':'bad'}">${sc} 分</span></h1>
+    <div class="subline">${r['性別']||''}・${g(r,'年齡')}歲・${r['婚姻']||''}・扶養 ${g(r,'扶養人數')} 人　|　LINE：${r['LINE ID']||'—'}　|　填寫：${fmtDate(r['填寫時間'])}</div>
+
+    <div class="grid">
+      <div class="stat"><div class="k">年收入</div><div class="v">${g(r,'年收入(萬)')}<small style="font-size:12px"> 萬</small></div></div>
+      <div class="stat"><div class="k">月開銷</div><div class="v">${g(r,'月開銷(萬)')}<small style="font-size:12px"> 萬</small></div></div>
+      <div class="stat"><div class="k">總資產</div><div class="v">${g(r,'現金存款(萬)')+g(r,'投資資產(萬)')+g(r,'不動產(萬)')}<small style="font-size:12px"> 萬</small></div></div>
+      <div class="stat"><div class="k">負債</div><div class="v">${g(r,'負債(萬)')}<small style="font-size:12px"> 萬</small></div></div>
+      <div class="stat"><div class="k">保障清楚度</div><div class="v" style="font-size:15px">${r['保障清楚度']||'—'}</div></div>
+      <div class="stat"><div class="k">資金缺口</div><div class="v" style="color:var(--bad)">${g(r,'總缺口(萬)')}<small style="font-size:12px"> 萬</small></div></div>
+    </div>
+
+    <div class="section">
+      <h3>五層防護力</h3>
+      ${layerRow('醫療',R.醫)}${layerRow('保障',R.保)}${layerRow('退休',R.退)}${layerRow('理財',R.理)}${layerRow('傳承',R.傳)}
+    </div>
+
+    <div class="section">
+      <h3>🎯 規則式：建議補強優先順序</h3>
+      ${prioHtml}
+    </div>
+
+    <div class="section">
+      <h3>🤖 AI 完整建議書 <span class="badge ${CFG.apiKey?'ok':'warn'}">${CFG.apiKey?'已啟用':'需 API Key'}</span></h3>
+      <button class="ai-btn" id="aiBtn" onclick="genAI()" ${CFG.apiKey?'':'disabled'}>生成這位客戶的專屬建議</button>
+      <div class="ai-out empty-hint" id="aiOut">${CFG.apiKey?'點上方按鈕，AI 會根據這位客戶的完整資料，產出補強優先順序、推薦商品方向、預期反對問題與應對話術。':'未填 Claude API Key，僅顯示規則式分析。可重新整理頁面回登入畫面補上。'}</div>
+    </div>
+  `;
+}
+
+function fmtDate(d){ try{ const x=new Date(d); return `${x.getMonth()+1}/${x.getDate()} ${String(x.getHours()).padStart(2,'0')}:${String(x.getMinutes()).padStart(2,'0')}`; }catch(e){ return d; } }
+
+/* ---------- AI 生成 ---------- */
+async function genAI(){
+  const r=SEL, btn=document.getElementById('aiBtn'), out=document.getElementById('aiOut');
+  btn.disabled=true; btn.textContent='AI 思考中…';
+  out.classList.remove('empty-hint'); out.textContent='';
+
+  const profile=buildProfile(r);
+  const prompt=`你是一位資深的台灣保險與財務規劃顧問督導，正在指導一位業務同仁如何服務以下這位剛完成「人生五大需求金字塔」風險試算的客戶。請根據資料，產出給「業務同仁看」的內部作戰建議（不是給客戶看的）。
+
+客戶資料：
+${profile}
+
+請用繁體中文、條理分明地輸出三個段落，每段用標題開頭：
+
+【一、補強優先順序】
+依金字塔由下而上的原則（醫療→保障→退休→理財→傳承），結合這位客戶防護力最低的層級，列出前 3 個最該優先處理的缺口，並簡短說明為什麼這個順序對「這位客戶」最合理。
+
+【二、推薦商品方向】
+針對上述缺口，建議可切入的「商品類型方向」（例如實支實付醫療險、定期壽險、長照險、年金險、利變型保單等），用台灣市場常見的險種類別描述即可，不要編造特定公司商品名稱或保費數字。
+
+【三、預期反對問題與應對】
+預測這位客戶最可能提出的 2~3 個反對或猶豫（例如「我覺得我保險夠了」「沒有預算」「再想想」），各給一句同理且專業的回應方向。
+
+注意：語氣務實、給業務看的，不要寫成給客戶的推銷文。不要捏造任何數字或法規，不確定的就用通則描述。`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':CFG.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    if(data.error){ out.textContent='生成失敗：'+(data.error.message||JSON.stringify(data.error)); btn.disabled=false; btn.textContent='重新生成'; return; }
+    const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    out.textContent=text||'（沒有取得回應）';
+    // 附複製按鈕
+    const cp=document.createElement('button');
+    cp.className='copy-line'; cp.textContent='📋 複製這份建議';
+    cp.onclick=()=>{ navigator.clipboard.writeText(text); cp.textContent='✓ 已複製'; setTimeout(()=>cp.textContent='📋 複製這份建議',2000); };
+    out.after(cp);
+  }catch(e){
+    out.textContent='連線失敗：'+e.message+'（若是 CORS 問題，請確認使用最新版瀏覽器）';
+  }
+  btn.disabled=false; btn.textContent='重新生成';
+}
+
+function buildProfile(r){
+  const lines=[
+    `姓名 ${r['姓名']}｜${r['性別']}｜${g(r,'年齡')}歲｜${r['婚姻']}｜扶養 ${g(r,'扶養人數')} 人`,
+    `保障清楚度：${r['保障清楚度']}（「不清楚」代表客戶連自己有什麼保單都不確定）`,
+    `防護分數 ${g(r,'防護分數')}/100，五層防護力（醫/保/退/理/傳）：${r['五層防護力(醫/保/退/理/傳)']}`,
+    `年收入 ${g(r,'年收入(萬)')} 萬｜月開銷 ${g(r,'月開銷(萬)')} 萬｜現金 ${g(r,'現金存款(萬)')} 萬｜投資資產 ${g(r,'投資資產(萬)')} 萬｜不動產 ${g(r,'不動產(萬)')} 萬｜負債 ${g(r,'負債(萬)')} 萬`,
+    `年投資投入 ${g(r,'年投資投入(萬)')} 萬｜年保費 ${g(r,'年保費支出(萬)')} 萬｜被動收入 ${g(r,'被動收入(萬/年)')} 萬/年`,
+    `現有保障——壽險 ${g(r,'壽險(萬)')} 萬｜醫療日額 ${g(r,'醫療日額(元)')} 元｜實支實付 ${g(r,'實支實付(萬/次)')} 萬｜門診手術 ${r['門診手術']}｜重大傷病 ${g(r,'重大傷病(萬)')} 萬｜癌症 ${g(r,'癌症(萬)')} 萬｜意外壽險 ${g(r,'意外壽險(萬)')} 萬｜意外日額 ${g(r,'意外日額(元)')} 元｜意外實支 ${g(r,'意外實支(萬/次)')} 萬｜長照月給付 ${g(r,'長照月給付(萬)')} 萬`,
+    `退休——理想月生活費 ${g(r,'退休理想月生活費(萬)')} 萬｜已備退休金 ${g(r,'退休後生活金(萬)')} 萬`,
+    `傳承規劃：${r['傳承規劃']}`
+  ];
+  return lines.join('\n');
+}
+</script>
+</body>
+</html>
